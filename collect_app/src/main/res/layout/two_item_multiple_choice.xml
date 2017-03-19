@@ -5,7 +5,7 @@
 	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES 
 	OR CONDITIONS OF ANY KIND, either express or implied. See the License for 
 	the specific language governing permissions and limitations under the License. -->
-<org.odk.collect.android.views.TwoItemMultipleChoiceView xmlns:android="http://schemas.android.com/apk/res/android"
+<com.renngiles.beesweet.collect.android.views.TwoItemMultipleChoiceView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
@@ -57,4 +57,4 @@
             android:clickable="false"
             android:focusable="false" />
     </RelativeLayout>
-</org.odk.collect.android.views.TwoItemMultipleChoiceView>
+</com.renngiles.beesweet.collect.android.views.TwoItemMultipleChoiceView>

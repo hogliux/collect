@@ -10,7 +10,7 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="org.odk.collect.android"
+    package="com.renngiles.beesweet.collect.android"
     >
 
     <uses-feature android:name="android.hardware.location" android:required="false" />
@@ -46,9 +46,9 @@
     -->
 
     <permission
-          android:name="org.odk.collect.android.permission.MAPS_RECEIVE"
+          android:name="com.renngiles.beesweet.collect.android.permission.MAPS_RECEIVE"
           android:protectionLevel="signature" />
-    <uses-permission android:name="org.odk.collect.android.permission.MAPS_RECEIVE" />
+    <uses-permission android:name="com.renngiles.beesweet.collect.android.permission.MAPS_RECEIVE" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
 
     <supports-screens
@@ -60,7 +60,7 @@
         android:smallScreens="true" />
 
     <application
-        android:name="org.odk.collect.android.application.Collect"
+        android:name="com.renngiles.beesweet.collect.android.application.Collect"
 		android:supportsRtl="true" 
         android:largeHeap="true"
         android:installLocation="auto"
@@ -71,12 +71,12 @@
 
         <provider
             android:exported="true"
-            android:name="org.odk.collect.android.provider.FormsProvider"
-            android:authorities="org.odk.collect.android.provider.odk.forms" />
+            android:name="com.renngiles.beesweet.collect.android.provider.FormsProvider"
+            android:authorities="com.renngiles.beesweet.collect.android.provider.odk.forms" />
         <provider
             android:exported="true"
-            android:name="org.odk.collect.android.provider.InstanceProvider"
-            android:authorities="org.odk.collect.android.provider.odk.instances" />
+            android:name="com.renngiles.beesweet.collect.android.provider.InstanceProvider"
+            android:authorities="com.renngiles.beesweet.collect.android.provider.odk.instances" />
 
         <activity
             android:name=".activities.MainMenuActivity"
@@ -253,7 +253,7 @@
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
             <intent-filter>
-                <action android:name="org.odk.collect.android.FormSaved" />
+                <action android:name="com.renngiles.beesweet.collect.android.FormSaved" />
             </intent-filter>
         </receiver>
         <!-- Register AnalyticsReceiver and AnalyticsService to support background

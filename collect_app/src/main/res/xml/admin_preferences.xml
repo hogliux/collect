@@ -6,8 +6,8 @@
         android:title="@string/general_preferences" >
         <intent
             android:action="android.intent.action.VIEW"
-            android:targetClass="org.odk.collect.android.preferences.PreferencesActivity"
-            android:targetPackage="org.odk.collect.android" >
+            android:targetClass="com.renngiles.beesweet.collect.android.preferences.PreferencesActivity"
+            android:targetPackage="com.renngiles.beesweet.collect.android" >
             <extra
                 android:name="adminMode"
                 android:value="true" />
@@ -19,7 +19,7 @@
         android:key="admin_password"
         android:title="@string/admin_password" />
 
-    <org.odk.collect.android.preferences.ResetDialogPreference
+    <com.renngiles.beesweet.collect.android.preferences.ResetDialogPreference
         android:id="@+id/reset_settings_dialog"
         android:defaultValue=""
         android:dialogTitle="@string/reset_settings_dialog_title"
