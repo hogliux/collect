@@ -64,7 +64,7 @@
 		android:supportsRtl="true" 
         android:largeHeap="true"
         android:installLocation="auto"
-        android:icon="@drawable/notes"
+        android:icon="@drawable/beesweet"
         android:label="@string/app_name"
         android:theme="@style/Collect"
         >
