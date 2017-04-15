@@ -84,9 +84,9 @@ public class NetworkReceiver extends BroadcastReceiver implements InstanceUpload
         SharedPreferences sharedPreferences = PreferenceManager
                 .getDefaultSharedPreferences(context);
         boolean sendwifi = sharedPreferences.getBoolean(
-                PreferencesActivity.KEY_AUTOSEND_WIFI, false);
+                PreferencesActivity.KEY_AUTOSEND_WIFI, true);
         boolean sendnetwork = sharedPreferences.getBoolean(
-                PreferencesActivity.KEY_AUTOSEND_NETWORK, false);
+                PreferencesActivity.KEY_AUTOSEND_NETWORK, true);
 
         return (currentNetworkInfo.getType() == ConnectivityManager.TYPE_WIFI
                 && sendwifi || currentNetworkInfo.getType() == ConnectivityManager.TYPE_MOBILE
