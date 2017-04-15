@@ -171,7 +171,7 @@ public class ImageWebViewWidget extends QuestionWidget implements IBinaryWidget 
                 // if this gets modified, the onActivityResult in
                 // FormEntyActivity will also need to be updated.
                 i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
-                        Uri.fromFile(new File(Collect.TMPFILE_PATH)));
+                        Uri.fromFile(new File(Collect.getODKPath (Collect.TMPFILE_PATH_ID))));
                 try {
                     Collect.getInstance().getFormController()
                             .setIndexWaitingForData(mPrompt.getIndex());

@@ -50,12 +50,12 @@ public class ResetUtility {
                     resetForms(context);
                     break;
                 case ResetAction.RESET_LAYERS:
-                    if (deleteFolderContents(Collect.OFFLINE_LAYERS)) {
+                    if (deleteFolderContents(Collect.getODKPath (Collect.OFFLINE_LAYERS_ID))) {
                         mFailedResetActions.remove(mFailedResetActions.indexOf(ResetAction.RESET_LAYERS));
                     }
                     break;
                 case ResetAction.RESET_CACHE:
-                    if (deleteFolderContents(Collect.CACHE_PATH)) {
+                    if (deleteFolderContents(Collect.getODKPath (Collect.CACHE_PATH_ID))) {
                         mFailedResetActions.remove(mFailedResetActions.indexOf(ResetAction.RESET_CACHE));
                     }
                     break;
@@ -84,7 +84,7 @@ public class ResetUtility {
     private void resetInstances(final Context context) {
         context.getContentResolver().delete(InstanceProviderAPI.InstanceColumns.CONTENT_URI, null, null);
 
-        if (deleteFolderContents(Collect.INSTANCES_PATH)) {
+        if (deleteFolderContents(Collect.getODKPath (Collect.INSTANCES_PATH_ID))) {
             mFailedResetActions.remove(mFailedResetActions.indexOf(ResetAction.RESET_INSTANCES));
         }
     }
@@ -92,9 +92,9 @@ public class ResetUtility {
     private void resetForms(final Context context) {
         context.getContentResolver().delete(FormsProviderAPI.FormsColumns.CONTENT_URI, null, null);
 
-        File itemsetDbFile = new File(Collect.METADATA_PATH + File.separator + ItemsetDbAdapter.DATABASE_NAME);
+        File itemsetDbFile = new File(Collect.getODKPath (Collect.METADATA_PATH_ID) + File.separator + ItemsetDbAdapter.DATABASE_NAME);
 
-        if (deleteFolderContents(Collect.FORMS_PATH) && (!itemsetDbFile.exists() || itemsetDbFile.delete())) {
+        if (deleteFolderContents(Collect.getODKPath (Collect.FORMS_PATH_ID)) && (!itemsetDbFile.exists() || itemsetDbFile.delete())) {
             mFailedResetActions.remove(mFailedResetActions.indexOf(ResetAction.RESET_FORMS));
         }
     }

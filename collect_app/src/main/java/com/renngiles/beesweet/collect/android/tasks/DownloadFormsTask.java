@@ -110,7 +110,7 @@ public class DownloadFormsTask extends
 
                 if (fd.manifestUrl != null) {
                     // use a temporary media path until everything is ok.
-                    tempMediaPath = new File(Collect.CACHE_PATH,
+                    tempMediaPath = new File(Collect.getODKPath (Collect.CACHE_PATH_ID),
                             String.valueOf(System.currentTimeMillis())).getAbsolutePath();
                     finalMediaPath = FileUtils.constructMediaPath(
                             fileResult.getFile().getAbsolutePath());
@@ -303,11 +303,11 @@ public class DownloadFormsTask extends
         rootName = rootName.trim();
 
         // proposed name of xml file...
-        String path = Collect.FORMS_PATH + File.separator + rootName + ".xml";
+        String path = Collect.getODKPath (Collect.FORMS_PATH_ID) + File.separator + rootName + ".xml";
         int i = 2;
         File f = new File(path);
         while (f.exists()) {
-            path = Collect.FORMS_PATH + File.separator + rootName + "_" + i + ".xml";
+            path = Collect.getODKPath (Collect.FORMS_PATH_ID) + File.separator + rootName + "_" + i + ".xml";
             f = new File(path);
             i++;
         }
@@ -370,7 +370,7 @@ public class DownloadFormsTask extends
      */
     private void downloadFile(File file, String downloadUrl) throws Exception {
         File tempFile = File.createTempFile(file.getName(), TEMP_DOWNLOAD_EXTENSION,
-                new File(Collect.CACHE_PATH));
+                new File(Collect.getODKPath (Collect.CACHE_PATH_ID)));
 
         URI uri;
         try {

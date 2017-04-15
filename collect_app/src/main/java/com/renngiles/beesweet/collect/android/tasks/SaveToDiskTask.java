@@ -238,7 +238,7 @@ public class SaveToDiskTask extends AsyncTask<Void, String, SaveResult> {
      * Return the name of the savepoint file for a given instance.
      */
     public static File savepointFile(File instancePath) {
-        File tempDir = new File(Collect.CACHE_PATH);
+        File tempDir = new File(Collect.getODKPath (Collect.CACHE_PATH_ID));
         return new File(tempDir, instancePath.getName() + ".save");
     }
 

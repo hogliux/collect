@@ -159,7 +159,7 @@ public class MapHelper {
     }
 
     public static String[] getOfflineLayerList() {
-        File[] files = new File(Collect.OFFLINE_LAYERS).listFiles();
+        File[] files = new File(Collect.getODKPath (Collect.OFFLINE_LAYERS_ID)).listFiles();
         ArrayList<String> results = new ArrayList<String>();
         results.add(no_folder_key);
         for (File f : files) {
@@ -240,7 +240,7 @@ public class MapHelper {
     }
 
     private File[] getFileFromSelectedItem(int item) {
-        File directory = new File(Collect.OFFLINE_LAYERS + slash + offilineOverlays[item]);
+        File directory = new File(Collect.getODKPath (Collect.OFFLINE_LAYERS_ID) + slash + offilineOverlays[item]);
         File[] files = directory.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String filename) {

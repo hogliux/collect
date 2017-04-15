@@ -130,7 +130,7 @@ public class MainMenuActivity extends Activity {
 
         setTitle(getString(R.string.main_menu));
 
-        File f = new File(Collect.ODK_ROOT + "/collect.settings");
+        File f = new File(Collect.getODKPath (Collect.ODK_ROOT_ID) + "/collect.settings");
         if (f.exists()) {
             boolean success = loadSharedPreferencesFromFile(f);
             if (success) {

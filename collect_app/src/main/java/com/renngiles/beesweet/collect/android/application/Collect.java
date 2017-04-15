@@ -53,18 +53,29 @@ import java.io.File;
 public class Collect extends Application {
 
     // Storage paths
-    public static final String ODK_ROOT = Environment.getExternalStorageDirectory()
-            + File.separator + "odk";
-    public static final String FORMS_PATH = ODK_ROOT + File.separator + "forms";
-    public static final String INSTANCES_PATH = ODK_ROOT + File.separator + "instances";
-    public static final String CACHE_PATH = ODK_ROOT + File.separator + ".cache";
-    public static final String METADATA_PATH = ODK_ROOT + File.separator + "metadata";
-    public static final String TMPFILE_PATH = CACHE_PATH + File.separator + "tmp.jpg";
-    public static final String TMPDRAWFILE_PATH = CACHE_PATH + File.separator + "tmpDraw.jpg";
-    public static final String TMPXML_PATH = CACHE_PATH + File.separator + "tmp.xml";
-    public static final String LOG_PATH = ODK_ROOT + File.separator + "log";
+    public static final String FORMS_PATH_STR = "forms";
+    public static final String INSTANCES_PATH_STR = "instances";
+    public static final String CACHE_PATH_STR = ".cache";
+    public static final String METADATA_PATH_STR = "metadata";
+    public static final String TMPFILE_PATH_STR = CACHE_PATH_STR + File.separator + "tmp.jpg";
+    public static final String TMPDRAWFILE_PATH_STR = CACHE_PATH_STR + File.separator + "tmpDraw.jpg";
+    public static final String TMPXML_PATH_STR = CACHE_PATH_STR + File.separator + "tmp.xml";
+    public static final String LOG_PATH_STR = "log";
+    public static final String OFFLINE_LAYERS_STR = "layers";
+
+    public static final int ODK_ROOT_ID   = 0;
+    public static final int FORMS_PATH_ID = 1;
+    public static final int INSTANCES_PATH_ID = 2;
+    public static final int CACHE_PATH_ID = 3;
+    public static final int METADATA_PATH_ID = 4;
+    public static final int TMPFILE_PATH_ID = 5;
+    public static final int TMPDRAWFILE_PATH_ID = 6;
+    public static final int TMPXML_PATH_ID = 7;
+    public static final int LOG_PATH_ID = 8;
+    public static final int OFFLINE_LAYERS_ID = 9;
+
     public static final String DEFAULT_FONTSIZE = "21";
-    public static final String OFFLINE_LAYERS = ODK_ROOT + File.separator + "layers";
+
     private static Collect singleton = null;
 
     static {
@@ -82,6 +93,42 @@ public class Collect extends Application {
 
     public static Collect getInstance() {
         return singleton;
+    }
+
+    public static String getODKRoot() {
+        return getInstance().getApplicationInfo().dataDir + File.separator + "odk_beesweet";
+    }
+
+    public static String getODKPath (int pathID)
+    {
+        String p = getODKRoot();
+
+        switch (pathID)
+        {
+            case ODK_ROOT_ID:
+                return p;
+            case FORMS_PATH_ID:
+                return p + File.separator + FORMS_PATH_STR;
+            case INSTANCES_PATH_ID:
+                return p + File.separator + INSTANCES_PATH_STR;
+            case CACHE_PATH_ID:
+                return p + File.separator + CACHE_PATH_STR;
+            case METADATA_PATH_ID:
+                return p + File.separator + METADATA_PATH_STR;
+            case TMPFILE_PATH_ID:
+                return p + File.separator + TMPFILE_PATH_STR;
+            case TMPDRAWFILE_PATH_ID:
+                return p + File.separator + TMPDRAWFILE_PATH_STR;
+            case TMPXML_PATH_ID:
+                return p + File.separator + TMPXML_PATH_STR;
+            case LOG_PATH_ID:
+                return p + File.separator + LOG_PATH_STR;
+            case OFFLINE_LAYERS_ID:
+                return p + File.separator + OFFLINE_LAYERS_STR;
+        }
+
+        assert (false);
+        return p;
     }
 
     public static int getQuestionFontsize() {
@@ -105,11 +152,12 @@ public class Collect extends Application {
                     Collect.getInstance().getString(R.string.sdcard_unmounted, cardstatus));
         }
 
-        String[] dirs = {
-                ODK_ROOT, FORMS_PATH, INSTANCES_PATH, CACHE_PATH, METADATA_PATH, OFFLINE_LAYERS
+        int[] dirs = {
+                ODK_ROOT_ID, FORMS_PATH_ID, INSTANCES_PATH_ID, CACHE_PATH_ID, METADATA_PATH_ID, OFFLINE_LAYERS_ID
         };
 
-        for (String dirName : dirs) {
+        for (int dirId : dirs) {
+            String dirName = getODKPath (dirId);
             File dir = new File(dirName);
             if (!dir.exists()) {
                 if (!dir.mkdirs()) {
@@ -139,8 +187,10 @@ public class Collect extends Application {
          * could be in use by ODK Tables.
          */
         String dirPath = directory.getAbsolutePath();
-        if (dirPath.startsWith(Collect.ODK_ROOT)) {
-            dirPath = dirPath.substring(Collect.ODK_ROOT.length());
+        String odkRoot = getODKPath(Collect.ODK_ROOT_ID);
+
+        if (dirPath.startsWith(odkRoot)) {
+            dirPath = dirPath.substring(odkRoot.length());
             String[] parts = dirPath.split(File.separator);
             // [appName, instances, tableId, instanceId ]
             if (parts.length == 4 && parts[1].equals("instances")) {

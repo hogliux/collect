@@ -798,7 +798,7 @@ public class GoogleDriveActivity extends ListActivity implements GoogleApiClient
                         return results;
                     }
 
-                    File mediaDir = new File(Collect.FORMS_PATH + File.separator + mediaDirName);
+                    File mediaDir = new File(Collect.getODKPath (Collect.FORMS_PATH_ID) + File.separator + mediaDirName);
                     if (!mediaDir.exists()) {
                         mediaDir.mkdir();
                     }
@@ -806,7 +806,7 @@ public class GoogleDriveActivity extends ListActivity implements GoogleApiClient
                     for (com.google.api.services.drive.model.File file : mediaFileList) {
                         InputStream is = downloadFile(service, file);
 
-                        File targetFile = new File(Collect.FORMS_PATH +
+                        File targetFile = new File(Collect.getODKPath (Collect.FORMS_PATH_ID) +
                                 File.separator + mediaDirName + File.separator + file.getTitle());
 
                         try {
@@ -832,7 +832,7 @@ public class GoogleDriveActivity extends ListActivity implements GoogleApiClient
 
                     InputStream is = downloadFile(service, df);
                     BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                    FileWriter fw = new FileWriter(Collect.FORMS_PATH + File.separator
+                    FileWriter fw = new FileWriter(Collect.getODKPath (Collect.FORMS_PATH_ID) + File.separator
                             + fileItem.getName());
 
                     int c;
