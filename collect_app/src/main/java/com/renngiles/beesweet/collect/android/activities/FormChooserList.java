@@ -68,8 +68,13 @@ public class FormChooserList extends ListActivity implements DiskSyncListener {
         setContentView(R.layout.chooser_list_layout);
         setTitle(getString(R.string.enter_data));
 
+        String[] hiddenSelectionArgs = {
+                "0"
+        };
+        String hiddenSelection = FormsColumns.INTERN_IS_HIDDEN + "=?";
+
         String sortOrder = FormsColumns.DISPLAY_NAME + " ASC, " + FormsColumns.JR_VERSION + " DESC";
-        Cursor c = managedQuery(FormsColumns.CONTENT_URI, null, null, null, sortOrder);
+        Cursor c = managedQuery(FormsColumns.CONTENT_URI, null, hiddenSelection, hiddenSelectionArgs, sortOrder);
 
         String[] data = new String[]{
                 FormsColumns.DISPLAY_NAME, FormsColumns.DISPLAY_SUBTEXT, FormsColumns.JR_VERSION

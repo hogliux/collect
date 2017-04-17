@@ -85,6 +85,10 @@ public class FormsProvider extends ContentProvider {
                     + " text not null, "
                     + FormsColumns.JR_VERSION
                     + " text, "
+                    + FormsColumns.INTERN_FORM_ID
+                    + " text, "
+                    + FormsColumns.INTERN_IS_HIDDEN
+                    + " integer default 0,"
                     + FormsColumns.MD5_HASH
                     + " text not null, "
                     + FormsColumns.DATE
@@ -710,6 +714,10 @@ public class FormsProvider extends ContentProvider {
                 FormsColumns.DESCRIPTION);
         sFormsProjectionMap.put(FormsColumns.JR_FORM_ID,
                 FormsColumns.JR_FORM_ID);
+        sFormsProjectionMap.put(FormsColumns.INTERN_FORM_ID,
+                FormsColumns.INTERN_FORM_ID);
+        sFormsProjectionMap.put(FormsColumns.INTERN_IS_HIDDEN,
+                FormsColumns.INTERN_IS_HIDDEN);
         sFormsProjectionMap.put(FormsColumns.JR_VERSION,
                 FormsColumns.JR_VERSION);
         sFormsProjectionMap.put(FormsColumns.SUBMISSION_URI,

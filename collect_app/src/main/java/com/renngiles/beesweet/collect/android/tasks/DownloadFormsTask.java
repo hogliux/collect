@@ -247,15 +247,68 @@ public class DownloadFormsTask extends
             isNew = cursor.getCount() <= 0;
 
             if (isNew) {
+                boolean isHidden = false;
+
+                Log.w(t, "Parsing document " + formFile.getAbsolutePath());
+
+                HashMap<String, String> formInfo = FileUtils.parseXML(formFile);
+
+                String jrFormID = formInfo.get(FileUtils.FORMID);
+                int separator = jrFormID.lastIndexOf ("$$");
+                String internalFormId = (separator != -1 ? jrFormID.substring (0, separator) : jrFormID);
+
+                int oldVersion = Integer.parseInt (formInfo.get(FileUtils.VERSION));
+
+                {
+                    String[] idSelectionArgs = {
+                            internalFormId
+                    };
+                    String idSelection = FormsColumns.INTERN_FORM_ID + "=?";
+
+                    Cursor versionCursor = Collect.getInstance()
+                                                  .getContentResolver()
+                                                  .query(FormsColumns.CONTENT_URI, null, idSelection, idSelectionArgs, null);
+
+                    int n = versionCursor.getCount();
+                    if (n > 0)
+                    {
+                        versionCursor.moveToFirst();
+
+                        for (int i = 0; i < n; ++i)
+                        {
+                            int jVersion = Integer.parseInt (versionCursor.getString (versionCursor.
+                                    getColumnIndex(FormsColumns.JR_VERSION)));
+
+                            if (jVersion < oldVersion)
+                            {
+                                String uniqueId = versionCursor.getString (versionCursor.
+                                        getColumnIndex(FormsColumns.JR_FORM_ID));
+
+                                String[] uniqueSelectionArgs = {
+                                        uniqueId
+                                };
+                                String uniqueSelection = FormsColumns.JR_FORM_ID + "=?";
+
+                                ContentValues u = new ContentValues();
+                                u.put (FormsColumns.INTERN_IS_HIDDEN, 1);
+
+                                Collect.getInstance()
+                                        .getContentResolver()
+                                        .update(FormsColumns.CONTENT_URI, u, uniqueSelection, uniqueSelectionArgs);
+                            }
+                            else
+                            {
+                                isHidden = true;
+                            }
+                        }
+                    }
+                }
+
                 // doesn't exist, so insert it
                 ContentValues v = new ContentValues();
 
                 v.put(FormsColumns.FORM_FILE_PATH, formFilePath);
                 v.put(FormsColumns.FORM_MEDIA_PATH, mediaPath);
-
-                Log.w(t, "Parsing document " + formFile.getAbsolutePath());
-
-                HashMap<String, String> formInfo = FileUtils.parseXML(formFile);
 
                 if (isCancelled()) {
                     throw new TaskCancelledException(formFile, "Form " + formFile.getName()
@@ -265,6 +318,8 @@ public class DownloadFormsTask extends
                 v.put(FormsColumns.DISPLAY_NAME, formInfo.get(FileUtils.TITLE));
                 v.put(FormsColumns.JR_VERSION, formInfo.get(FileUtils.VERSION));
                 v.put(FormsColumns.JR_FORM_ID, formInfo.get(FileUtils.FORMID));
+                v.put(FormsColumns.INTERN_FORM_ID, internalFormId);
+                v.put(FormsColumns.INTERN_IS_HIDDEN, (isHidden ? 1 : 0));
                 v.put(FormsColumns.SUBMISSION_URI, formInfo.get(FileUtils.SUBMISSIONURI));
                 v.put(FormsColumns.BASE64_RSA_PUBLIC_KEY,
                         formInfo.get(FileUtils.BASE64_RSA_PUBLIC_KEY));
