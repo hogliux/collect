@@ -257,7 +257,11 @@ public class DownloadFormsTask extends
                 int separator = jrFormID.lastIndexOf ("$$");
                 String internalFormId = (separator != -1 ? jrFormID.substring (0, separator) : jrFormID);
 
-                int oldVersion = Integer.parseInt (formInfo.get(FileUtils.VERSION));
+                String jsVersionID = formInfo.get(FileUtils.VERSION);
+                int oldVersion = 0;
+
+                if (jsVersionID != null)
+                    oldVersion = Integer.parseInt (jsVersionID);
 
                 {
                     String[] idSelectionArgs = {
