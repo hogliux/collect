@@ -109,7 +109,7 @@ public class SplashScreenActivity extends Activity {
             SharedPreferences.Editor adminEditor = getSharedPreferences(ADMIN_PREFERENCES, MODE_PRIVATE).edit();
             adminEditor.putString(AdminPreferencesActivity.KEY_ADMIN_PW, "admin");
             adminEditor.putBoolean (AdminPreferencesActivity.KEY_EDIT_SAVED, false);
-            adminEditor.putBoolean (AdminPreferencesActivity.KEY_SEND_FINALIZED, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_SEND_FINALIZED, true);
             adminEditor.putBoolean (AdminPreferencesActivity.KEY_VIEW_SENT, false);
             adminEditor.putBoolean (AdminPreferencesActivity.KEY_GET_BLANK, false);
             adminEditor.putBoolean (AdminPreferencesActivity.KEY_DELETE_SAVED, false);

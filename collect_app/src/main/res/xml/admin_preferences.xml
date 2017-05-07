@@ -37,7 +37,7 @@
             android:title="@string/review_data" />
         <CheckBoxPreference
             android:id="@+id/send_finalized"
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="send_finalized"
             android:summary="@string/found_in_main"
             android:title="@string/send_data" />
