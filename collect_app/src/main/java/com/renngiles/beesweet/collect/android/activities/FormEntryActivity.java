@@ -94,6 +94,10 @@ import com.renngiles.beesweet.collect.android.views.ODKView;
 import com.renngiles.beesweet.collect.android.widgets.QuestionWidget;
 import com.renngiles.beesweet.collect.android.widgets.StringWidget;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.io.File;
 import java.io.FileFilter;
 import java.text.SimpleDateFormat;
@@ -642,7 +646,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                         + System.currentTimeMillis() + ".jpg";
 
                 File nf = new File(s);
-                if (!fi.renameTo(nf)) {
+                if (!copyFile (fi, nf)) {
                     Log.e(t, "Failed to rename " + fi.getAbsolutePath());
                 } else {
                     Log.i(t,
@@ -738,6 +742,22 @@ public class FormEntryActivity extends Activity implements AnimationListener,
 
         }
         refreshCurrentView();
+    }
+
+    private static boolean copyFile (File src, File dst) {
+        try {
+            FileInputStream inStream = new FileInputStream(src);
+            FileOutputStream outStream = new FileOutputStream(dst);
+            FileChannel inChannel = inStream.getChannel();
+            FileChannel outChannel = outStream.getChannel();
+            boolean isGood = (inChannel.transferTo(0, inChannel.size(), outChannel) == inChannel.size());
+            inStream.close();
+            outStream.close();
+
+            return isGood;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private void saveChosenImage(Uri selectedImage) {

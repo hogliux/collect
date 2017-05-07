@@ -106,8 +106,11 @@ public class ImageWidget extends QuestionWidget implements IBinaryWidget {
 
                 // if this gets modified, the onActivityResult in
                 // FormEntyActivity will also need to be updated.
+                String path = Collect.getODKPath (Collect.TMPFILE_PATH_ID);
+                File f = new File (path);
+
                 i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT,
-                        Uri.fromFile(new File(Collect.getODKPath (Collect.TMPFILE_PATH_ID))));
+                        Uri.fromFile(f));
                 try {
                     Collect.getInstance().getFormController().setIndexWaitingForData(
                             mPrompt.getIndex());

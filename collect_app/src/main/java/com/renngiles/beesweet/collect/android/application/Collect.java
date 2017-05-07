@@ -57,7 +57,7 @@ public class Collect extends Application {
     public static final String INSTANCES_PATH_STR = "instances";
     public static final String CACHE_PATH_STR = ".cache";
     public static final String METADATA_PATH_STR = "metadata";
-    public static final String TMPFILE_PATH_STR = CACHE_PATH_STR + File.separator + "tmp.jpg";
+    public static final String TMPFILE_PATH_STR = "tmp.jpg";
     public static final String TMPDRAWFILE_PATH_STR = CACHE_PATH_STR + File.separator + "tmpDraw.jpg";
     public static final String TMPXML_PATH_STR = CACHE_PATH_STR + File.separator + "tmp.xml";
     public static final String LOG_PATH_STR = "log";
@@ -112,11 +112,12 @@ public class Collect extends Application {
             case INSTANCES_PATH_ID:
                 return p + File.separator + INSTANCES_PATH_STR;
             case CACHE_PATH_ID:
-                return p + File.separator + CACHE_PATH_STR;
+                return Environment.getExternalStorageDirectory()
+                        + File.separator + "odk" + File.separator + CACHE_PATH_STR;
             case METADATA_PATH_ID:
                 return p + File.separator + METADATA_PATH_STR;
             case TMPFILE_PATH_ID:
-                return p + File.separator + TMPFILE_PATH_STR;
+                return getODKPath (CACHE_PATH_ID) + File.separator + TMPFILE_PATH_STR;
             case TMPDRAWFILE_PATH_ID:
                 return p + File.separator + TMPDRAWFILE_PATH_STR;
             case TMPXML_PATH_ID:
@@ -278,6 +279,7 @@ public class Collect extends Application {
     @Override
     public void onCreate() {
         singleton = this;
+        createODKDirs();
 
         // // set up logging defaults for apache http component stack
         // Log log;
