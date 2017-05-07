@@ -785,6 +785,14 @@ public class DownloadFormsTask extends
         }
     }
 
+    @Override
+    protected void onCancelled() {
+        synchronized (this) {
+            if (mStateListener != null) {
+                mStateListener.formsDownloadingComplete(null);
+            }
+        }
+    }
 
     @Override
     protected void onProgressUpdate(String... values) {

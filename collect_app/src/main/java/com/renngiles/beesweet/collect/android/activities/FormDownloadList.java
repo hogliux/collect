@@ -680,17 +680,21 @@ public class FormDownloadList extends ListActivity implements FormListDownloader
             mProgressDialog.dismiss();
         }
 
-        Set<FormDetails> keys = result.keySet();
         StringBuilder b = new StringBuilder();
-        for (FormDetails k : keys) {
-            b.append(k.formName +
-                    " (" +
-                    ((k.formVersion != null) ?
-                            (this.getString(R.string.version) + ": " + k.formVersion + " ")
-                            : "") +
-                    "ID: " + k.formID + ") - " +
-                    result.get(k));
-            b.append("\n\n");
+
+        if (result != null) {
+            Set<FormDetails> keys = result.keySet();
+
+            for (FormDetails k : keys) {
+                b.append(k.formName +
+                        " (" +
+                        ((k.formVersion != null) ?
+                                (this.getString(R.string.version) + ": " + k.formVersion + " ")
+                                : "") +
+                        "ID: " + k.formID + ") - " +
+                        result.get(k));
+                b.append("\n\n");
+            }
         }
 
         createAlertDialog(getString(R.string.download_forms_result), b.toString().trim(), EXIT);

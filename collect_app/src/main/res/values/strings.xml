@@ -27,6 +27,7 @@
 <string name="backup">backward to\nprevious\nprompt</string>
 <string name="barcode_scanner_error">Sorry, Barcode Scanner is not installed!</string>
 <string name="cancel">Cancel</string>
+<string name="skipFormDownload">Skip Form download...</string>
 <string name="cancel_loading_form">Cancel</string>
 <string name="cancel_location">Cancel</string>
 <string name="cannot_edit_completed_form">This form cannot be edited once it has been marked as complete. It may be encrypted.</string>

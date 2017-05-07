@@ -382,7 +382,8 @@
   <string name="geotrace_view_change_location">GeoTrace anzeigen oder ändern</string>
   <string name="bearing">Kompass-Peilung: %.3f</string>
   <string name="direction">Himmelsrichtung: %s</string>
-  <!--&lt; and &gt; surrounds the text so it will appear as <no form loaded>-->
+    <string name="skipFormDownload">Form download überspringen</string>
+    <!--&lt; and &gt; surrounds the text so it will appear as <no form loaded>-->
   <!--%1$s represents degrees, %2$s represents minutes and %3$s represents seconds as in W 18°48'8"-->
   <!--%1$s represents degrees, %2$s represents minutes and %3$s represents seconds as in E 18°48'8"-->
   <!--%1$s represents degrees, %2$s represents minutes and %3$s represents seconds as in S 18°48'8"-->

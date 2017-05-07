@@ -17,12 +17,17 @@ package com.renngiles.beesweet.collect.android.activities;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -30,6 +35,7 @@ import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -44,12 +50,17 @@ import com.google.android.gms.analytics.GoogleAnalytics;
 
 import com.renngiles.beesweet.collect.android.R;
 import com.renngiles.beesweet.collect.android.application.Collect;
+import com.renngiles.beesweet.collect.android.listeners.FormDownloaderListener;
+import com.renngiles.beesweet.collect.android.logic.FormDetails;
 import com.renngiles.beesweet.collect.android.preferences.AdminPreferencesActivity;
 import com.renngiles.beesweet.collect.android.preferences.PreferencesActivity;
 import com.renngiles.beesweet.collect.android.provider.InstanceProviderAPI;
 import com.renngiles.beesweet.collect.android.provider.InstanceProviderAPI.InstanceColumns;
+import com.renngiles.beesweet.collect.android.tasks.DownloadFormListTask;
+import com.renngiles.beesweet.collect.android.tasks.DownloadFormsTask;
 import com.renngiles.beesweet.collect.android.utilities.ApplicationConstants;
 import com.renngiles.beesweet.collect.android.utilities.CompatibilityUtils;
+import com.renngiles.beesweet.collect.android.listeners.FormListDownloaderListener;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -57,6 +68,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -67,14 +80,20 @@ import java.util.Map.Entry;
  * @author Carl Hartung (carlhartung@gmail.com)
  * @author Yaw Anokwa (yanokwa@gmail.com)
  */
-public class MainMenuActivity extends Activity {
+public class MainMenuActivity extends Activity implements FormListDownloaderListener, FormDownloaderListener {
     private static final String t = "MainMenuActivity";
 
     private static final int PASSWORD_DIALOG = 1;
 
+    private static final int numberOfSecondsUntilFormDownloadAbort = 5;
+
     // menu options
     private static final int MENU_PREFERENCES = Menu.FIRST;
     private static final int MENU_ADMIN = Menu.FIRST + 1;
+
+    private static final String DIALOG_TITLE = "dialogtitle";
+    private static final String DIALOG_MSG = "dialogmsg";
+    private static final String DIALOG_SHOWING = "dialogshowing";
 
     // buttons
     private Button mEnterDataButton;
@@ -103,11 +122,238 @@ public class MainMenuActivity extends Activity {
 
     private static boolean EXIT = true;
 
+    private HashMap<String, FormDetails> mFormNamesAndURLs = new HashMap<String, FormDetails>();
+    private ProgressDialog mProgressDialog;
+    private DownloadFormListTask mDownloadFormListTask;
+    private DownloadFormsTask mDownloadFormsTask;
+    private String mAlertMsg;
+    private boolean mAlertShowing = false;
+    private String mAlertTitle;
+    private static final int PROGRESS_DIALOG = 3;
+
+    private static final String FORMNAME = "formname";
+    private static final String FORMDETAIL_KEY = "formdetailkey";
+    private static final String FORMID_DISPLAY = "formiddisplay";
+
+    private static final String FORM_ID_KEY = "formid";
+    private static final String FORM_VERSION_KEY = "formversion";
+
+    private ArrayList<HashMap<String, String>> mFormList = new ArrayList<HashMap<String, String>>();
+
     // private static boolean DO_NOT_EXIT = false;
+
+    private boolean downloadFormList() {
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ni = connectivityManager.getActiveNetworkInfo();
+
+        if (ni == null || !ni.isConnected()) {
+            Toast.makeText(this, R.string.no_connection, Toast.LENGTH_SHORT).show();
+        } else {
+
+            mFormNamesAndURLs = new HashMap<String, FormDetails>();
+            if (mProgressDialog != null) {
+                // This is needed because onPrepareDialog() is broken in 1.6.
+                mProgressDialog.setMessage(getString(R.string.please_wait));
+            }
+            showDialog(PROGRESS_DIALOG);
+
+            if (mDownloadFormListTask != null &&
+                    mDownloadFormListTask.getStatus() != AsyncTask.Status.FINISHED) {
+                return true; // we are already doing the download!!!
+            } else if (mDownloadFormListTask != null) {
+                mDownloadFormListTask.cancel(true);
+            }
+
+            mDownloadFormListTask = new DownloadFormListTask();
+            mDownloadFormListTask.setDownloaderListener(this);
+
+            mDownloadFormListTask.execute();
+
+            new java.util.Timer().schedule(
+                    new java.util.TimerTask() {
+                        @Override
+                        public void run() {
+                            abortFormDownload();
+                        }
+                    },
+                    numberOfSecondsUntilFormDownloadAbort * 1000
+            );
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void abortFormDownload()
+    {
+        synchronized (this) {
+            if (mDownloadFormListTask != null)
+            {
+                mDownloadFormListTask.cancel (true);
+            }
+            else if (mDownloadFormsTask != null)
+            {
+                mDownloadFormsTask.cancel (true);
+            }
+        }
+    }
+
+    private void createAlertDialog(String title, String message) {
+        Collect.getInstance().getActivityLogger().logAction(this, "createAlertDialog", "show");
+        mAlertDialog = new AlertDialog.Builder(this).create();
+        mAlertDialog.setTitle(title);
+        mAlertDialog.setMessage(message);
+        DialogInterface.OnClickListener quitListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int i) {
+                switch (i) {
+                    case DialogInterface.BUTTON_POSITIVE: // ok
+                        Collect.getInstance().getActivityLogger().logAction(this,
+                                "createAlertDialog", "OK");
+                        // just close the dialog
+                        mAlertShowing = false;
+                        startFillInForm();
+                        break;
+                }
+            }
+        };
+        mAlertDialog.setCancelable(false);
+        mAlertDialog.setButton(getString(R.string.ok), quitListener);
+        mAlertDialog.setIcon(android.R.drawable.ic_dialog_info);
+        mAlertMsg = message;
+        mAlertTitle = title;
+        mAlertShowing = true;
+        mAlertDialog.show();
+    }
+
+    @Override
+    public void formListDownloadingComplete(HashMap<String, FormDetails> result) {
+
+        synchronized (this) {
+            if (mDownloadFormListTask != null) {
+                mDownloadFormListTask.setDownloaderListener(null);
+                mDownloadFormListTask = null;
+            }
+        }
+
+        if (result == null) {
+            dismissDialog(PROGRESS_DIALOG);
+        } else {
+
+            if (result.containsKey(DownloadFormListTask.DL_ERROR_MSG)) {
+                dismissDialog(PROGRESS_DIALOG);
+                // Download failed
+                String dialogMessage =
+                        getString(R.string.list_failed_with_error,
+                                result.get(DownloadFormListTask.DL_ERROR_MSG).errorStr);
+                String dialogTitle = getString(R.string.load_remote_form_error);
+                createAlertDialog(dialogTitle, dialogMessage);
+            } else {
+                // Everything worked. Clear the list and add the results.
+                mFormNamesAndURLs = result;
+
+                mFormList.clear();
+
+                ArrayList<String> ids = new ArrayList<String>(mFormNamesAndURLs.keySet());
+                for (int i = 0; i < result.size(); i++) {
+                    String formDetailsKey = ids.get(i);
+                    FormDetails details = mFormNamesAndURLs.get(formDetailsKey);
+                    HashMap<String, String> item = new HashMap<String, String>();
+                    item.put(FORMNAME, details.formName);
+                    item.put(FORMID_DISPLAY,
+                            ((details.formVersion == null) ? "" : (getString(R.string.version) + " "
+                                    + details.formVersion + " ")) +
+                                    "ID: " + details.formID);
+                    item.put(FORMDETAIL_KEY, formDetailsKey);
+                    item.put(FORM_ID_KEY, details.formID);
+                    item.put(FORM_VERSION_KEY, details.formVersion);
+
+                    // Insert the new form in alphabetical order.
+                    if (mFormList.size() == 0) {
+                        mFormList.add(item);
+                    } else {
+                        int j;
+                        for (j = 0; j < mFormList.size(); j++) {
+                            HashMap<String, String> compareMe = mFormList.get(j);
+                            String name = compareMe.get(FORMNAME);
+                            if (name.compareTo(mFormNamesAndURLs.get(ids.get(i)).formName) > 0) {
+                                break;
+                            }
+                        }
+                        mFormList.add(j, item);
+                    }
+                }
+
+                downloadSelectedFiles();
+                return;
+            }
+        }
+
+        startFillInForm();
+    }
+
+    private void downloadSelectedFiles() {
+        int totalCount = 0;
+        ArrayList<FormDetails> filesToDownload = new ArrayList<FormDetails>();
+
+        for (int i = 0; i < mFormList.size(); i++) {
+            HashMap<String, String> item = mFormList.get (i);
+            filesToDownload.add(mFormNamesAndURLs.get(item.get(FORMDETAIL_KEY)));
+        }
+        totalCount = filesToDownload.size();
+
+        Collect.getInstance().getActivityLogger().logAction(this, "downloadSelectedFiles",
+                Integer.toString(totalCount));
+
+        if (totalCount > 0) {
+            mDownloadFormsTask = new DownloadFormsTask();
+            mDownloadFormsTask.setDownloaderListener(this);
+            mDownloadFormsTask.execute(filesToDownload);
+        } else {
+            dismissDialog(PROGRESS_DIALOG);
+            startFillInForm();
+        }
+    }
+
+    public void formsDownloadingComplete(HashMap<FormDetails, String> result)
+    {
+        synchronized (this) {
+            if (mDownloadFormsTask != null) {
+                mDownloadFormsTask.setDownloaderListener(null);
+                mDownloadFormsTask = null;
+            }
+        }
+
+        if (mProgressDialog.isShowing()) {
+            // should always be true here
+            mProgressDialog.dismiss();
+        }
+
+        startFillInForm();
+    }
+
+    public void progressUpdate(String currentFile, int progress, int total)
+    {
+        mAlertMsg = getString(R.string.fetching_file, currentFile, String.valueOf(progress), String.valueOf(total));
+        mProgressDialog.setMessage(mAlertMsg);
+    }
+
+    private void startFillInForm()
+    {
+        Collect.getInstance().getActivityLogger()
+                .logAction(this, "fillBlankForm", "click");
+        Intent i = new Intent(getApplicationContext(),
+                FormChooserList.class);
+        startActivity(i);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mAlertMsg = getString(R.string.please_wait);
 
         // must be at the beginning of any activity that can be called from an
         // external intent
@@ -157,11 +403,10 @@ public class MainMenuActivity extends Activity {
         mEnterDataButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Collect.getInstance().getActivityLogger()
-                        .logAction(this, "fillBlankForm", "click");
-                Intent i = new Intent(getApplicationContext(),
-                        FormChooserList.class);
-                startActivity(i);
+                if (! downloadFormList())
+                {
+                    startFillInForm();
+                }
             }
         });
 
@@ -226,7 +471,6 @@ public class MainMenuActivity extends Activity {
                             FormDownloadList.class);
                 }
                 startActivity(i);
-
             }
         });
 
@@ -243,6 +487,20 @@ public class MainMenuActivity extends Activity {
                 startActivity(i);
             }
         });
+
+        if (savedInstanceState != null)
+        {
+            // to restore alert dialog.
+            if (savedInstanceState.containsKey(DIALOG_TITLE)) {
+                mAlertTitle = savedInstanceState.getString(DIALOG_TITLE);
+            }
+            if (savedInstanceState.containsKey(DIALOG_MSG)) {
+                mAlertMsg = savedInstanceState.getString(DIALOG_MSG);
+            }
+            if (savedInstanceState.containsKey(DIALOG_SHOWING)) {
+                mAlertShowing = savedInstanceState.getBoolean(DIALOG_SHOWING);
+            }
+        }
 
         // count for finalized instances
         String selection = InstanceColumns.STATUS + "=? or "
@@ -510,7 +768,34 @@ public class MainMenuActivity extends Activity {
                 passwordDialog.getWindow().setSoftInputMode(
                         WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
                 return passwordDialog;
-
+            case PROGRESS_DIALOG:
+                Collect.getInstance().getActivityLogger().logAction(this,
+                        "onCreateDialog.PROGRESS_DIALOG", "show");
+                mProgressDialog = new ProgressDialog(this);
+                DialogInterface.OnClickListener loadingButtonListener =
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Collect.getInstance().getActivityLogger().logAction(this,
+                                        "onCreateDialog.PROGRESS_DIALOG", "OK");
+                                dialog.dismiss();
+                                // we use the same progress dialog for both
+                                // so whatever isn't null is running
+                                if (mDownloadFormListTask != null) {
+                                    mDownloadFormListTask.cancel(true);
+                                }
+                                if (mDownloadFormsTask != null) {
+                                    mDownloadFormsTask.cancel(true);
+                                }
+                            }
+                        };
+                mProgressDialog.setTitle(getString(R.string.downloading_data));
+                mProgressDialog.setMessage(mAlertMsg);
+                mProgressDialog.setIcon(android.R.drawable.ic_dialog_info);
+                mProgressDialog.setIndeterminate(true);
+                mProgressDialog.setCancelable(false);
+                mProgressDialog.setButton(getString(R.string.skipFormDownload), loadingButtonListener);
+                return mProgressDialog;
         }
         return null;
     }

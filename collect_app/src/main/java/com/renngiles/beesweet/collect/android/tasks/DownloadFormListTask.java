@@ -270,6 +270,14 @@ public class DownloadFormListTask extends AsyncTask<Void, String, HashMap<String
         }
     }
 
+    @Override
+    protected void onCancelled() {
+        synchronized (this) {
+            if (mStateListener != null) {
+                mStateListener.formListDownloadingComplete(null);
+            }
+        }
+    }
 
     public void setDownloaderListener(FormListDownloaderListener sl) {
         synchronized (this) {
