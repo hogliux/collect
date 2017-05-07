@@ -13,13 +13,13 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:fillViewport="true"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="10dp" >
+        android:padding="10dp">
 
         <View
             android:layout_width="fill_parent"
@@ -61,7 +61,8 @@
             android:layout_gravity="left"
             android:layout_marginBottom="10dp"
             android:text="@string/mark_finished"
-            android:textSize="21sp" />
+            android:textSize="21sp"
+            android:visibility="invisible" />
 
         <Button
             android:id="@+id/save_exit_button"

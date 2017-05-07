@@ -1075,7 +1075,7 @@ public class FormEntryActivity extends Activity implements AnimationListener,
                 // checkbox for if finished or ready to send
                 final CheckBox instanceComplete = ((CheckBox) endView
                         .findViewById(R.id.mark_finished));
-                instanceComplete.setChecked(isInstanceComplete(true));
+                instanceComplete.setChecked(/*isInstanceComplete(true)*/true);
 
                 if (!mAdminPreferences.getBoolean(
                         AdminPreferencesActivity.KEY_MARK_AS_FINALIZED, true)) {
