@@ -34,6 +34,7 @@ import android.widget.LinearLayout;
 
 import com.renngiles.beesweet.collect.android.R;
 import com.renngiles.beesweet.collect.android.application.Collect;
+import com.renngiles.beesweet.collect.android.preferences.AdminPreferencesActivity;
 import com.renngiles.beesweet.collect.android.preferences.PreferencesActivity;
 
 import java.io.File;
@@ -43,6 +44,7 @@ import java.io.IOException;
 
 public class SplashScreenActivity extends Activity {
 
+    public static String ADMIN_PREFERENCES = "admin_prefs";
     private static final int mSplashTimeout = 2000; // milliseconds
     private static final boolean EXIT = true;
 
@@ -102,6 +104,40 @@ public class SplashScreenActivity extends Activity {
         if (firstRun || showSplash) {
             editor.putBoolean(PreferencesActivity.KEY_FIRST_RUN, false);
             editor.commit();
+
+            SharedPreferences.Editor adminEditor = getSharedPreferences(ADMIN_PREFERENCES, MODE_PRIVATE).edit();
+            adminEditor.putString(AdminPreferencesActivity.KEY_ADMIN_PW, "admin");
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_EDIT_SAVED, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_SEND_FINALIZED, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_VIEW_SENT, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_GET_BLANK, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_DELETE_SAVED, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_CHANGE_SERVER, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_CHANGE_PROTOCOL_SETTINGS, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_CHANGE_USERNAME, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_CHANGE_PASSWORD, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_CHANGE_GOOGLE_ACCOUNT, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_AUTOSEND_NETWORK, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_AUTOSEND_WIFI, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_NAVIGATION, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_CONSTRAINT_BEHAVIOR, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_CHANGE_FONT_SIZE, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_DEFAULT_TO_FINALIZED, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_DELETE_AFTER_SEND, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_HIGH_RESOLUTION, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_SHOW_SPLASH_SCREEN, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_SHOW_MAP_SDK, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_SHOW_MAP_BASEMAP, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_ANALYTICS, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_ACCESS_SETTINGS, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_CHANGE_LANGUAGE, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_JUMP_TO, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_SAVE_MID, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_SAVE_AS, false);
+            adminEditor.putBoolean (AdminPreferencesActivity.KEY_MARK_AS_FINALIZED, false);
+
+            adminEditor.commit();
+
             startSplashScreen(splashPath);
         } else {
             endSplashScreen();
