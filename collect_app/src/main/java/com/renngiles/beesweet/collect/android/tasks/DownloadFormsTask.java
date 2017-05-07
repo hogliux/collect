@@ -269,42 +269,51 @@ public class DownloadFormsTask extends
                     };
                     String idSelection = FormsColumns.INTERN_FORM_ID + "=?";
 
-                    Cursor versionCursor = Collect.getInstance()
-                                                  .getContentResolver()
-                                                  .query(FormsColumns.CONTENT_URI, null, idSelection, idSelectionArgs, null);
+                    Cursor versionCursor = null;
+                    try {
+                        versionCursor = Collect.getInstance()
+                                .getContentResolver()
+                                .query(FormsColumns.CONTENT_URI, null, idSelection, idSelectionArgs, null);
 
-                    int n = versionCursor.getCount();
-                    if (n > 0)
-                    {
-                        versionCursor.moveToFirst();
+                        int n = versionCursor.getCount();
+                        if (n > 0) {
+                            versionCursor.moveToFirst();
+                            for (int i = 0; i < n; ++i) {
+                                String strVersion = versionCursor.getString(versionCursor.
+                                        getColumnIndex(FormsColumns.JR_VERSION));
+                                int jVersion = 0;
 
-                        for (int i = 0; i < n; ++i)
-                        {
-                            int jVersion = Integer.parseInt (versionCursor.getString (versionCursor.
-                                    getColumnIndex(FormsColumns.JR_VERSION)));
+                                if (strVersion != null && !strVersion.isEmpty())
+                                    jVersion = Integer.parseInt(strVersion);
 
-                            if (jVersion < oldVersion)
-                            {
-                                String uniqueId = versionCursor.getString (versionCursor.
-                                        getColumnIndex(FormsColumns.JR_FORM_ID));
+                                if (jVersion < oldVersion) {
+                                    String uniqueId = versionCursor.getString(versionCursor.
+                                            getColumnIndex(FormsColumns.JR_FORM_ID));
 
-                                String[] uniqueSelectionArgs = {
-                                        uniqueId
-                                };
-                                String uniqueSelection = FormsColumns.JR_FORM_ID + "=?";
+                                    if (uniqueId == jrFormID)
+                                        continue;
 
-                                ContentValues u = new ContentValues();
-                                u.put (FormsColumns.INTERN_IS_HIDDEN, 1);
+                                    String[] uniqueSelectionArgs = {
+                                            uniqueId
+                                    };
+                                    String uniqueSelection = FormsColumns.JR_FORM_ID + "=?";
 
-                                Collect.getInstance()
-                                        .getContentResolver()
-                                        .update(FormsColumns.CONTENT_URI, u, uniqueSelection, uniqueSelectionArgs);
-                            }
-                            else
-                            {
-                                isHidden = true;
+                                    ContentValues u = new ContentValues();
+                                    u.put(FormsColumns.INTERN_IS_HIDDEN, 1);
+
+                                    Collect.getInstance()
+                                            .getContentResolver()
+                                            .update(FormsColumns.CONTENT_URI, u, uniqueSelection, uniqueSelectionArgs);
+                                } else {
+                                    isHidden = true;
+                                }
                             }
                         }
+                    }
+                    finally
+                    {
+                        if (versionCursor != null)
+                            versionCursor.close();
                     }
                 }
 
