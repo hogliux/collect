@@ -95,7 +95,7 @@
             android:key="delete_send"
             android:summary="@string/delete_after_send_summary"
             android:title="@string/delete_after_send"
-            android:defaultValue="false"/>
+            android:defaultValue="true"/>
         <CheckBoxPreference
             android:id="@+id/high_resolution"
             android:defaultValue="true"

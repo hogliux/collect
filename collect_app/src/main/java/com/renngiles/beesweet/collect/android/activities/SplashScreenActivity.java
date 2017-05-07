@@ -103,6 +103,7 @@ public class SplashScreenActivity extends Activity {
         // do all the first run things
         if (firstRun || showSplash) {
             editor.putBoolean(PreferencesActivity.KEY_FIRST_RUN, false);
+            editor.putBoolean(PreferencesActivity.KEY_DELETE_AFTER_SEND, true);
             editor.commit();
 
             SharedPreferences.Editor adminEditor = getSharedPreferences(ADMIN_PREFERENCES, MODE_PRIVATE).edit();
