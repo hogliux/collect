@@ -85,7 +85,7 @@ public class MainMenuActivity extends Activity implements FormListDownloaderList
 
     private static final int PASSWORD_DIALOG = 1;
 
-    private static final int numberOfSecondsUntilFormDownloadAbort = 12;
+    private static final int numberOfSecondsUntilFormDownloadAbort = 120;
 
     // menu options
     private static final int MENU_PREFERENCES = Menu.FIRST;
