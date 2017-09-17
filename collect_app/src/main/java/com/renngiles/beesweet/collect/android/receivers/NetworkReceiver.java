@@ -187,45 +187,50 @@ public class NetworkReceiver extends BroadcastReceiver implements InstanceUpload
         if (result == null) {
             message.append(Collect.getInstance().getString(R.string.odk_auth_auth_fail));
         } else {
-
-            StringBuilder selection = new StringBuilder();
             Set<String> keys = result.keySet();
             Iterator<String> it = keys.iterator();
 
-            String[] selectionArgs = new String[keys.size()];
-            int i = 0;
-            while (it.hasNext()) {
-                String id = it.next();
-                selection.append(InstanceColumns._ID + "=?");
-                selectionArgs[i++] = id;
-                if (i != keys.size()) {
-                    selection.append(" or ");
+            int sqlMax = 999;
+            int pos = 0;
+            int len = keys.size();
+            while (pos < len) {
+                int max = (sqlMax < (len - pos) ? sqlMax : (len - pos));
+                StringBuilder selection = new StringBuilder();
+                String[] selectionArgs = new String[max];
+                for (int i = 0; i < max; ++i) {
+                    String id = it.next();
+                    selection.append(InstanceColumns._ID + "=?");
+                    selectionArgs[i] = id;
+                    if (i != (max - 1)) {
+                        selection.append(" or ");
+                    }
                 }
-            }
 
-            {
-                Cursor results = null;
-                try {
-                    results = Collect
-                            .getInstance()
-                            .getContentResolver()
-                            .query(InstanceColumns.CONTENT_URI, null, selection.toString(),
-                                    selectionArgs, null);
-                    if (results.getCount() > 0) {
-                        results.moveToPosition(-1);
-                        while (results.moveToNext()) {
-                            String name = results.getString(results
-                                    .getColumnIndex(InstanceColumns.DISPLAY_NAME));
-                            String id = results.getString(results
-                                    .getColumnIndex(InstanceColumns._ID));
-                            message.append(name + " - " + result.get(id) + "\n\n");
+                {
+                    Cursor results = null;
+                    try {
+                        results = Collect
+                                .getInstance()
+                                .getContentResolver()
+                                .query(InstanceColumns.CONTENT_URI, null, selection.toString(),
+                                        selectionArgs, null);
+                        if (results.getCount() > 0) {
+                            results.moveToPosition(-1);
+                            while (results.moveToNext()) {
+                                String name = results.getString(results
+                                        .getColumnIndex(InstanceColumns.DISPLAY_NAME));
+                                String id = results.getString(results
+                                        .getColumnIndex(InstanceColumns._ID));
+                                message.append(name + " - " + result.get(id) + "\n\n");
+                            }
+                        }
+                    } finally {
+                        if (results != null) {
+                            results.close();
                         }
                     }
-                } finally {
-                    if (results != null) {
-                        results.close();
-                    }
                 }
+                pos += max;
             }
         }
 
