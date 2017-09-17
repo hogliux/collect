@@ -633,56 +633,66 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                 } else {
                     mStateListener.uploadingComplete(outcome.mResults);
 
-                    StringBuilder selection = new StringBuilder();
                     Set<String> keys = outcome.mResults.keySet();
                     Iterator<String> it = keys.iterator();
 
-                    String[] selectionArgs = new String[keys.size() + 1];
-                    int i = 0;
-                    selection.append("(");
-                    while (it.hasNext()) {
-                        String id = it.next();
-                        selection.append(InstanceColumns._ID + "=?");
-                        selectionArgs[i++] = id;
-                        if (i != keys.size()) {
-                            selection.append(" or ");
-                        }
-                    }
-                    selection.append(") and status=?");
-                    selectionArgs[i] = InstanceProviderAPI.STATUS_SUBMITTED;
+                    int len = keys.size();
+                    int pos = 0;
+                    int sqlMax = 998;
 
-                    Cursor results = null;
-                    try {
-                        results = Collect
-                                .getInstance()
-                                .getContentResolver()
-                                .query(InstanceColumns.CONTENT_URI, null, selection.toString(),
-                                        selectionArgs, null);
-                        if (results.getCount() > 0) {
-                            Long[] toDelete = new Long[results.getCount()];
-                            results.moveToPosition(-1);
+                    while (pos < len) {
+                        StringBuilder selection = new StringBuilder();
+                        selection.append("(");
 
-                            int cnt = 0;
-                            while (results.moveToNext()) {
-                                toDelete[cnt] = results.getLong(results
-                                        .getColumnIndex(InstanceColumns._ID));
-                                cnt++;
+                        int max = (sqlMax < (len - pos) ? sqlMax : (len - pos));
+                        String[] selectionArgs = new String[max + 1];
+
+                        for (int i = 0; i < max; ++i) {
+                            String id = it.next();
+                            selection.append(InstanceColumns._ID + "=?");
+                            selectionArgs[i] = id;
+                            if (i != (max - 1)) {
+                                selection.append(" or ");
                             }
+                        }
+                        selection.append(") and status=?");
+                        selectionArgs[max] = InstanceProviderAPI.STATUS_SUBMITTED;
 
-                            boolean deleteFlag = PreferenceManager.getDefaultSharedPreferences(
-                                    Collect.getInstance().getApplicationContext()).getBoolean(
-                                    PreferencesActivity.KEY_DELETE_AFTER_SEND, false);
-                            if (deleteFlag) {
-                                DeleteInstancesTask dit = new DeleteInstancesTask();
-                                dit.setContentResolver(Collect.getInstance().getContentResolver());
-                                dit.execute(toDelete);
+                        Cursor results = null;
+                        try {
+                            results = Collect
+                                    .getInstance()
+                                    .getContentResolver()
+                                    .query(InstanceColumns.CONTENT_URI, null, selection.toString(),
+                                            selectionArgs, null);
+                            if (results.getCount() > 0) {
+                                Long[] toDelete = new Long[results.getCount()];
+                                results.moveToPosition(-1);
+
+                                int cnt = 0;
+                                while (results.moveToNext()) {
+                                    toDelete[cnt] = results.getLong(results
+                                            .getColumnIndex(InstanceColumns._ID));
+                                    cnt++;
+                                }
+
+                                boolean deleteFlag = PreferenceManager.getDefaultSharedPreferences(
+                                        Collect.getInstance().getApplicationContext()).getBoolean(
+                                        PreferencesActivity.KEY_DELETE_AFTER_SEND, false);
+                                if (deleteFlag) {
+                                    DeleteInstancesTask dit = new DeleteInstancesTask();
+                                    dit.setContentResolver(Collect.getInstance().getContentResolver());
+                                    dit.execute(toDelete);
+                                }
+
                             }
+                        } finally {
+                            if (results != null) {
+                                results.close();
+                            }
+                        }
 
-                        }
-                    } finally {
-                        if (results != null) {
-                            results.close();
-                        }
+                        pos += max;
                     }
                 }
             }
