@@ -214,47 +214,51 @@ public class InstanceUploaderActivity extends Activity implements InstanceUpload
             // tried to close a dialog not open. don't care.
         }
 
-        StringBuilder selection = new StringBuilder();
         Set<String> keys = result.keySet();
-        Iterator<String> it = keys.iterator();
 
-        String[] selectionArgs = new String[keys.size()];
-        int i = 0;
-        while (it.hasNext()) {
-            String id = it.next();
-            selection.append(InstanceColumns._ID + "=?");
-            selectionArgs[i++] = id;
-            if (i != keys.size()) {
-                selection.append(" or ");
+        if (keys.size() <= 999) {
+            StringBuilder selection = new StringBuilder();
+
+            Iterator<String> it = keys.iterator();
+
+            String[] selectionArgs = new String[keys.size()];
+            int i = 0;
+            while (it.hasNext()) {
+                String id = it.next();
+                selection.append(InstanceColumns._ID + "=?");
+                selectionArgs[i++] = id;
+                if (i != keys.size()) {
+                    selection.append(" or ");
+                }
             }
-        }
 
-        StringBuilder message = new StringBuilder();
-        {
-            Cursor results = null;
-            try {
-                results = getContentResolver().query(InstanceColumns.CONTENT_URI,
-                        null, selection.toString(), selectionArgs, null);
-                if (results.getCount() > 0) {
-                    results.moveToPosition(-1);
-                    while (results.moveToNext()) {
-                        String name =
-                                results.getString(
-                                        results.getColumnIndex(InstanceColumns.DISPLAY_NAME));
-                        String id = results.getString(results.getColumnIndex(InstanceColumns._ID));
-                        message.append(name + " - " + result.get(id) + "\n\n");
+            StringBuilder message = new StringBuilder();
+            {
+                Cursor results = null;
+                try {
+                    results = getContentResolver().query(InstanceColumns.CONTENT_URI,
+                            null, selection.toString(), selectionArgs, null);
+                    if (results.getCount() > 0) {
+                        results.moveToPosition(-1);
+                        while (results.moveToNext()) {
+                            String name =
+                                    results.getString(
+                                            results.getColumnIndex(InstanceColumns.DISPLAY_NAME));
+                            String id = results.getString(results.getColumnIndex(InstanceColumns._ID));
+                            message.append(name + " - " + result.get(id) + "\n\n");
+                        }
+                    } else {
+                        message.append(getString(R.string.no_forms_uploaded));
                     }
-                } else {
-                    message.append(getString(R.string.no_forms_uploaded));
-                }
-            } finally {
-                if (results != null) {
-                    results.close();
+                } finally {
+                    if (results != null) {
+                        results.close();
+                    }
                 }
             }
         }
 
-        createAlertDialog(message.toString().trim());
+        createAlertDialog("Uploaded " + Integer.toString (result.keySet().size()) + " forms.");
     }
 
 

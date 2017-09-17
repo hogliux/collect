@@ -57,6 +57,7 @@ import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -519,70 +520,81 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
 
     // TODO: This method is like 350 lines long, down from 400.
     // still. ridiculous. make it smaller.
-    protected Outcome doInBackground(Long... values) {
+    protected Outcome doInBackground(Long... valuesToDo) {
         Outcome outcome = new Outcome();
 
-        StringBuffer selectionBuf = new StringBuffer(InstanceColumns._ID + " IN (");
-        String[] selectionArgs = new String[(values == null) ? 0 : values.length];
-        if (values != null) {
-            for (int i = 0; i < values.length; i++) {
-                if (i > 0) {
-                    selectionBuf.append(",");
-                }
-                selectionBuf.append("?");
-                selectionArgs[i] = values[i].toString();
-            }
-        }
-        selectionBuf.append(")");
-        String selection = selectionBuf.toString();
+        int len = valuesToDo.length;
+        int sqlMax = 999;
+        int pos = 0;
+        List<Long> originalList = Arrays.asList (valuesToDo);
 
-        String deviceId = new PropertyManager(Collect.getInstance().getApplicationContext())
-                .getSingularProperty(PropertyManager.OR_DEVICE_ID_PROPERTY);
+        while (pos < len) {
+            int max = (sqlMax < (len - pos) ? sqlMax : (len - pos));
+            Long values[] = originalList.subList (pos, pos+max).toArray(new Long[0]);
 
-        // get shared HttpContext so that authentication and cookies are retained.
-        HttpContext localContext = Collect.getInstance().getHttpContext();
-
-        Map<Uri, Uri> uriRemap = new HashMap<Uri, Uri>();
-
-        Cursor c = null;
-        try {
-            c = Collect.getInstance().getContentResolver()
-                    .query(InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
-
-            if (c.getCount() > 0) {
-                c.moveToPosition(-1);
-                while (c.moveToNext()) {
-                    if (isCancelled()) {
-                        return outcome;
+            StringBuffer selectionBuf = new StringBuffer(InstanceColumns._ID + " IN (");
+            String[] selectionArgs = new String[(values == null) ? 0 : values.length];
+            if (values != null) {
+                for (int i = 0; i < values.length; i++) {
+                    if (i > 0) {
+                        selectionBuf.append(",");
                     }
-                    publishProgress(c.getPosition() + 1, c.getCount());
-                    String instance = c.getString(
-                            c.getColumnIndex(InstanceColumns.INSTANCE_FILE_PATH));
-                    String id = c.getString(c.getColumnIndex(InstanceColumns._ID));
-                    Uri toUpdate = Uri.withAppendedPath(InstanceColumns.CONTENT_URI, id);
-
-                    // Use the app's configured URL unless the form included a submission URL
-                    int subIdx = c.getColumnIndex(InstanceColumns.SUBMISSION_URI);
-                    String urlString = c.isNull(subIdx) ? getServerSubmissionURL() : c.getString(
-                            subIdx).trim();
-
-                    // add the deviceID to the request...
-                    try {
-                        urlString += "?deviceID=" + URLEncoder.encode(deviceId, "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        // unreachable...
-                    }
-
-                    if (!uploadOneSubmission(urlString, id, instance, toUpdate, localContext,
-                            uriRemap, outcome)) {
-                        return outcome; // get credentials...
-                    }
+                    selectionBuf.append("?");
+                    selectionArgs[i] = values[i].toString();
                 }
             }
-        } finally {
-            if (c != null) {
-                c.close();
+            selectionBuf.append(")");
+            String selection = selectionBuf.toString();
+
+            String deviceId = new PropertyManager(Collect.getInstance().getApplicationContext())
+                    .getSingularProperty(PropertyManager.OR_DEVICE_ID_PROPERTY);
+
+            // get shared HttpContext so that authentication and cookies are retained.
+            HttpContext localContext = Collect.getInstance().getHttpContext();
+
+            Map<Uri, Uri> uriRemap = new HashMap<Uri, Uri>();
+
+            Cursor c = null;
+            try {
+                c = Collect.getInstance().getContentResolver()
+                        .query(InstanceColumns.CONTENT_URI, null, selection, selectionArgs, null);
+
+                if (c.getCount() > 0) {
+                    c.moveToPosition(-1);
+                    while (c.moveToNext()) {
+                        if (isCancelled()) {
+                            return outcome;
+                        }
+                        publishProgress(c.getPosition() + 1 + pos, len);
+                        String instance = c.getString(
+                                c.getColumnIndex(InstanceColumns.INSTANCE_FILE_PATH));
+                        String id = c.getString(c.getColumnIndex(InstanceColumns._ID));
+                        Uri toUpdate = Uri.withAppendedPath(InstanceColumns.CONTENT_URI, id);
+
+                        // Use the app's configured URL unless the form included a submission URL
+                        int subIdx = c.getColumnIndex(InstanceColumns.SUBMISSION_URI);
+                        String urlString = c.isNull(subIdx) ? getServerSubmissionURL() : c.getString(
+                                subIdx).trim();
+
+                        // add the deviceID to the request...
+                        try {
+                            urlString += "?deviceID=" + URLEncoder.encode(deviceId, "UTF-8");
+                        } catch (UnsupportedEncodingException e) {
+                            // unreachable...
+                        }
+
+                        if (!uploadOneSubmission(urlString, id, instance, toUpdate, localContext,
+                                uriRemap, outcome)) {
+                            return outcome; // get credentials...
+                        }
+                    }
+                }
+            } finally {
+                if (c != null) {
+                    c.close();
+                }
             }
+            pos += values.length;
         }
 
         return outcome;
@@ -621,56 +633,66 @@ public class InstanceUploaderTask extends AsyncTask<Long, Integer, InstanceUploa
                 } else {
                     mStateListener.uploadingComplete(outcome.mResults);
 
-                    StringBuilder selection = new StringBuilder();
                     Set<String> keys = outcome.mResults.keySet();
                     Iterator<String> it = keys.iterator();
 
-                    String[] selectionArgs = new String[keys.size() + 1];
-                    int i = 0;
-                    selection.append("(");
-                    while (it.hasNext()) {
-                        String id = it.next();
-                        selection.append(InstanceColumns._ID + "=?");
-                        selectionArgs[i++] = id;
-                        if (i != keys.size()) {
-                            selection.append(" or ");
-                        }
-                    }
-                    selection.append(") and status=?");
-                    selectionArgs[i] = InstanceProviderAPI.STATUS_SUBMITTED;
+                    int len = keys.size();
+                    int pos = 0;
+                    int sqlMax = 998;
 
-                    Cursor results = null;
-                    try {
-                        results = Collect
-                                .getInstance()
-                                .getContentResolver()
-                                .query(InstanceColumns.CONTENT_URI, null, selection.toString(),
-                                        selectionArgs, null);
-                        if (results.getCount() > 0) {
-                            Long[] toDelete = new Long[results.getCount()];
-                            results.moveToPosition(-1);
+                    while (pos < len) {
+                        StringBuilder selection = new StringBuilder();
+                        selection.append("(");
 
-                            int cnt = 0;
-                            while (results.moveToNext()) {
-                                toDelete[cnt] = results.getLong(results
-                                        .getColumnIndex(InstanceColumns._ID));
-                                cnt++;
+                        int max = (sqlMax < (len - pos) ? sqlMax : (len - pos));
+                        String[] selectionArgs = new String[max + 1];
+
+                        for (int i = 0; i < max; ++i) {
+                            String id = it.next();
+                            selection.append(InstanceColumns._ID + "=?");
+                            selectionArgs[i] = id;
+                            if (i != (max - 1)) {
+                                selection.append(" or ");
                             }
+                        }
+                        selection.append(") and status=?");
+                        selectionArgs[max] = InstanceProviderAPI.STATUS_SUBMITTED;
 
-                            boolean deleteFlag = PreferenceManager.getDefaultSharedPreferences(
-                                    Collect.getInstance().getApplicationContext()).getBoolean(
-                                    PreferencesActivity.KEY_DELETE_AFTER_SEND, false);
-                            if (deleteFlag) {
-                                DeleteInstancesTask dit = new DeleteInstancesTask();
-                                dit.setContentResolver(Collect.getInstance().getContentResolver());
-                                dit.execute(toDelete);
+                        Cursor results = null;
+                        try {
+                            results = Collect
+                                    .getInstance()
+                                    .getContentResolver()
+                                    .query(InstanceColumns.CONTENT_URI, null, selection.toString(),
+                                            selectionArgs, null);
+                            if (results.getCount() > 0) {
+                                Long[] toDelete = new Long[results.getCount()];
+                                results.moveToPosition(-1);
+
+                                int cnt = 0;
+                                while (results.moveToNext()) {
+                                    toDelete[cnt] = results.getLong(results
+                                            .getColumnIndex(InstanceColumns._ID));
+                                    cnt++;
+                                }
+
+                                boolean deleteFlag = PreferenceManager.getDefaultSharedPreferences(
+                                        Collect.getInstance().getApplicationContext()).getBoolean(
+                                        PreferencesActivity.KEY_DELETE_AFTER_SEND, false);
+                                if (deleteFlag) {
+                                    DeleteInstancesTask dit = new DeleteInstancesTask();
+                                    dit.setContentResolver(Collect.getInstance().getContentResolver());
+                                    dit.execute(toDelete);
+                                }
+
                             }
+                        } finally {
+                            if (results != null) {
+                                results.close();
+                            }
+                        }
 
-                        }
-                    } finally {
-                        if (results != null) {
-                            results.close();
-                        }
+                        pos += max;
                     }
                 }
             }
